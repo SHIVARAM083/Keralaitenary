@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kerala Itinerary Gallery</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #0f766e;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .gallery img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .gallery img:hover {
+      transform: scale(1.1);
+    }
+    .caption {
+      text-align: center;
+      margin-top: 6px;
+      font-weight: bold;
+    }
+
+    /* Lightbox (slideshow) */
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      color: white;
+      padding: 20px;
+    }
+    .lightbox img {
+      max-width: 80%;
+      max-height: 60%;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    .lightbox .title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .lightbox .desc {
+      font-size: 16px;
+      max-width: 80%;
+      margin: 0 auto 20px;
+    }
+    .lightbox .close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 30px;
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .lightbox .nav {
+      margin-top: 10px;
+    }
+    .lightbox button {
+      background: #0f766e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .lightbox button:hover {
+      background: #0c524b;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Kerala Itinerary — Image Gallery</h1>
+
+  <div class="gallery" id="gallery">
+    <!-- Thumbnails will be injected here by JavaScript -->
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <span class="close" onclick="closeLightbox()">&times;</span>
+    <div class="title" id="lbTitle"></div>
+    <img id="lbImg" src="" alt="">
+    <div class="desc" id="lbDesc"></div>
+    <div class="nav">
+      <button onclick="prevImage()">&#10094; Prev</button>
+      <button onclick="nextImage()">Next &#10095;</button>
+    </div>
+  </div>
+
+  <script>
+    const places = [
+      {title: "Fort Kochi", img: "fk.jpg", desc: "Historic colonial town with Chinese fishing nets, churches, and spice markets."},
+      {title: "Athirapally Falls", img: "af.jpg", desc: "The Niagara of India, a majestic waterfall on the Chalakudy River."},
+      {title: "Vazhachal Falls", img: "vf.jpg", desc: "Scenic waterfalls surrounded by lush forest, near Athirapally."},
+      {title: "Charpa Falls", img: "cf.jpg", desc: "A seasonal waterfall right by the roadside between Athirapally and Vazhachal."},
+      {title: "Thumboormuzhy Dam", img: "td.jpg", desc: "A picnic spot with gardens, butterfly park, and river views."},
+      {title: "Eravikulam National Park", img: "enp.jpg", desc: "Home of the Nilgiri Tahr and the beautiful Neelakurinji flowers."},
+      {title: "Mattupetty Dam", img: "mattupettey.jpg", desc: "A scenic dam and reservoir famous for boating and views."},
+      {title: "Echo Point", img: "echopoint.jpg", desc: "Famous for natural echo phenomenon amidst hills."},
+      {title: "Top Station", img: "topstation.jpg", desc: "Highest point in Munnar with panoramic views of Western Ghats."},
+      {title: "Pothamedu View Point", img: "pothamedu.jpg", desc: "Viewpoint overlooking tea, coffee, and cardamom plantations."},
+      {title: "Kolukkumalai Peak", img: "kolukkumalai.jpg", desc: "World’s highest tea estate with stunning sunrise treks."},
+      {title: "Periyar Tiger Reserve", img: "periyartigerreserve.jpg", desc: "A wildlife sanctuary with elephants, tigers, and boat safaris."},
+      {title: "Periyar Lake", img: "periyarlake.jpg", desc: "A lake inside Periyar reserve famous for boat cruises."},
+      {title: "Chellarkovil View Point", img: "chellarkovil.jpg", desc: "Viewpoint with waterfall and plains of Tamil Nadu visible."},
+      {title: "Houseboat Stay in Alleppey", img: "hb.jpg", desc: "Experience Kerala backwaters in traditional houseboats."},
+      {title: "Alleppey Beach", img: "alleppybeach.jpg", desc: "A serene beach with golden sands and an old pier."},
+      {title: "Varkala Cliff", img: "varakalacliff.jpg", desc: "Cliffs overlooking the Arabian Sea with cafes and shops."},
+      {title: "Beaches in Varkala", img: "beaches.jpg", desc: "Popular for swimming, sunbathing, and beachside yoga."},
+      {title: "Jatayu Earth Centre", img: "jatayu.jpg", desc: "World’s largest bird sculpture with adventure activities."},
+      {title: "Padmanabhaswamy Temple", img: "anantha.jpg", desc: "A famous Vishnu temple with Dravidian architecture."},
+      {title: "Kovalam Beach", img: "kovalam.jpg", desc: "Kerala’s most famous beach with lighthouse and surfing."},
+      {title: "Azhimala Shiva Temple", img: "azhimala.jpg", desc: "Clifftop temple with giant Shiva statue overlooking the sea."}
+    ];
+
+    let currentIndex = 0;
+
+    const gallery = document.getElementById('gallery');
+    const lb = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lbImg');
+    const lbTitle = document.getElementById('lbTitle');
+    const lbDesc = document.getElementById('lbDesc');
+
+    // Create thumbnails
+    places.forEach((place, i) => {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <img src="${place.img}" alt="${place.title}" onclick="openLightbox(${i})">
+        <div class="caption">${place.title}</div>
+      `;
+      gallery.appendChild(div);
+    });
+
+    function openLightbox(index) {
+      currentIndex = index;
+      lb.style.display = "flex";
+      showImage();
+    }
+
+    function closeLightbox() {
+      lb.style.display = "none";
+    }
+
+    function showImage() {
+      const place = places[currentIndex];
+      lbImg.src = place.img;
+      lbTitle.innerText = place.title;
+      lbDesc.innerText = place.desc;
+    }
+
+    function nextImage() {
+      currentIndex = (currentIndex + 1) % places.length;
+      showImage();
+    }
+
+    function prevImage() {
+      currentIndex = (currentIndex - 1 + places.length) % places.length;
+      showImage();
+    }
+  </script>
+</body>
+</html>
